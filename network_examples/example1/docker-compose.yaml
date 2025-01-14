@@ -1,0 +1,74 @@
+version: "3"
+services:
+  ubuntu1:
+    container_name: ubuntu1
+    image: ubuntu
+    cap_add: 
+      - NET_ADMIN
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    restart: on-failure
+    volumes:
+      - './sshKeys:/home/.ssh'
+    networks:
+      - first_network
+
+  ubuntu_out:
+    container_name: ubuntu_out
+    image: ubuntu
+    cap_add:
+      - NET_ADMIN
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    restart: on-failure
+    volumes:
+      - './sshKeys:/home/.ssh'
+    networks:
+      - first_network
+      - second_network
+
+  ubuntu3:
+    container_name: ubuntu2
+    image: ubuntu
+    cap_add:
+      - NET_ADMIN
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    restart: on-failure
+    volumes:
+      - './sshKeys:/home/.ssh'
+    networks:
+      - second_network
+
+networks:
+  first_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16
+          gateway: 172.18.0.1
+  second_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.19.0.0/16
+          gateway: 172.19.0.1
+
