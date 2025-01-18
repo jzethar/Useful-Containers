@@ -1,0 +1,15 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['alertname']
+  group_wait: 5s
+  group_interval: 10s
+  repeat_interval: 10m
+  receiver: "api-webhook"
+
+receivers:
+  - name: "api-webhook"
+    webhook_configs:
+      - url: "http://metrics-catcher:9090/on_alert"
+
