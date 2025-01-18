@@ -1,0 +1,11 @@
+groups:
+  - name: test_endpoint_alerts
+    rules:
+      - alert: TestEndpointCall
+        expr: increase(test_metric_total[10s]) > 0
+        for: 0s
+        labels:
+          severity: info
+        annotations:
+          summary: "/test endpoint was called"
+          description: "The /test endpoint has been called recently (increment detected)."

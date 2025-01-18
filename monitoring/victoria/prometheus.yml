@@ -1,0 +1,16 @@
+# my global config
+global:
+  scrape_interval: 5s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  - job_name: app_go
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+        - "http://metrics-tester:9090"
+        labels:
+          instance: tester
+
+

@@ -1,0 +1,111 @@
+version: "3.5"
+
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: 5m
+      max-file: "2"
+
+services:
+  victoriametrics:
+    container_name: victoriametrics
+    image: victoriametrics/victoria-metrics:v1.99.0
+    <<: *logging
+    ports:
+      - 127.0.0.1:8428:8428
+      - 127.0.0.1:8089:8089
+      - 127.0.0.1:8089:8089/udp
+      - 127.0.0.1:2003:2003
+      - 127.0.0.1:2003:2003/udp
+      - 127.0.0.1:4242:4242
+    volumes:
+      - vmdata:/storage
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "-promscrape.config.strictParse=false"
+      - "-promscrape.config=/etc/prometheus/prometheus.yml"
+      - "--vmalert.proxyURL=http://vmalert:8880"
+    networks:
+      - vm_net
+    restart: always
+
+  vmalert:
+    container_name: vmalert
+    image: victoriametrics/vmalert:v1.99.0
+    <<: *logging
+    depends_on:
+      - "victoriametrics"
+      - "alertmanager"
+    ports:
+      - 127.0.0.1:8880:8880
+    volumes:
+      - ./alerts.rules.yml:/etc/alerts/alerts.yml
+    command:
+      - "-datasource.url=http://victoriametrics:8428/"
+      - "-remoteRead.url=http://victoriametrics:8428/"
+      - "-remoteWrite.url=http://victoriametrics:8428/"
+      - "-notifier.url=http://alertmanager:9093"
+      - "-rule=/etc/alerts/*.yml"
+      - "-loggerLevel=INFO"
+    networks:
+      - vm_net
+    restart: always
+
+  alertmanager:
+    container_name: alertmanager
+    image: prom/alertmanager:v0.27.0
+    <<: *logging
+    volumes:
+      - ./alertmanager.yml:/config/alertmanager.yml
+    command:
+      - "--config.file=/config/alertmanager.yml"
+      # - "--log.level=debug" // for debugging 
+    ports:
+      - 127.0.0.1:9093:9093
+    networks:
+      - vm_net
+    restart: always
+
+  metrics-tester:
+    container_name: metrics-tester
+    build:
+      context: metric-tester/
+      dockerfile: metric-tester.Dockerfile
+    <<: *logging
+    ports:
+      - 127.0.0.1:9090:9090
+    networks:
+      - vm_net
+    command: ["./main"]
+    restart: always
+
+  metrics-catcher:
+    container_name: metrics-catcher
+    build:
+      context: metric-catcher/
+      dockerfile: metric-catcher.Dockerfile
+    <<: *logging
+    ports:
+      - 127.0.0.1:9091:9090
+    networks:
+      - vm_net
+    command: ["./main"]
+    restart: always
+
+volumes:
+  vmagentdata:
+    driver: local
+    driver_opts:
+      type: none
+      device: /var/vmagentdata/data
+      o: bind
+  vmdata:
+    driver: local
+    driver_opts:
+      type: none
+      device: /var/vmdata/data
+      o: bind
+
+networks:
+  vm_net:
