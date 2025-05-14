@@ -1,5 +1,4 @@
 # Set up Gateway for Docker Containers in Different Networks
-
 This guide explains how to set up a gateway using Docker containers, allowing two containers in different networks to communicate via a third container acting as a router.
 
 ## Prerequisites
@@ -10,7 +9,6 @@ This guide explains how to set up a gateway using Docker containers, allowing tw
 
 ## Step 1: Verify Container IP Addresses
 First, check the IP addresses of the `ubuntu2` and `ubuntu_out` containers to ensure they are in the correct networks.
-
 ```sh
 docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ubuntu2
 docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ubuntu_out
