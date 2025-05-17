@@ -1,0 +1,76 @@
+version: "3.8"
+
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: 5m
+      max-file: "2"
+
+services:
+  ollama:
+    init: true
+    container_name: ollama
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    <<: *logging
+    restart: on-failure
+    ports:
+      - 0.0.0.0:11434:11434
+    volumes:
+      - ollama:/root/.ollama
+    networks:
+      - ollama-net
+
+  open-webui:
+    init: true
+    build:
+      context: ../open-webui/
+      args:
+        OLLAMA_BASE_URL: '/ollama'
+      dockerfile: Dockerfile
+    image: ghcr.io/open-webui/open-webui:v0.6.0
+    container_name: open-webui
+    volumes:
+      - webui:/app/backend/data
+    <<: *logging
+    depends_on:
+      - ollama
+    ports:
+      - 127.0.0.1:3000:8080
+    environment:
+      - 'OLLAMA_BASE_URL=http://ollama:11434'
+    restart: unless-stopped
+    networks:
+      - ollama-net
+
+
+networks:
+  ollama-net: 
+    external: true
+
+volumes:
+  ollama:
+    driver: local
+    driver_opts:
+      type: none
+      device: var/ollama/data
+      o: bind
+  webui:
+    driver: local
+    driver_opts:
+      type: none
+      device: var/ollama/webui
+      o: bind
+
