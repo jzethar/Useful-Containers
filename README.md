@@ -12,3 +12,7 @@ Some docker compose and Dockerfile files to make my life easier
 ## [Network Manipulation Examples](network_examples/example1/README.md)
 **Purpose:** Understand the network connections between containers.
 **Usage:** For future use in improving network isolation between containers.
+
+## [Ollama & Nvidia Driver](ollama/README.md)
+**Purpose:** Understand how to connect GPU to the container and experiment with LLM.
+**Usage:** For future development
